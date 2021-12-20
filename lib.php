@@ -52,7 +52,6 @@ function check_enabled() {
     }
     return false;
 }
-
 class plagiarism_plugin_tomagrade extends plagiarism_plugin{
     const GOODEXTENSIONS = array(
         "pdf" => "application/pdf",
@@ -1995,17 +1994,16 @@ class tomagrade_connection
                 $tempdir = "TempDir_" . time();
                 if ($isexam == true) {
                     $url = "https://$config->tomagrade_server.tomagrade.com/TomaGrade/libs/fileUploader/uploadManagerZip.php?Exam_ID="
-                     . $examidintg . "&TempDirName=" . $tempdir . "&UserID=" .$useridtable;
+                     . $examidintg . "&TempDirName=" . $tempdir . "&UserID=" . $config->tomagrade_username;
                 } else {
                     $url = "https://$config->tomagrade_server.tomagrade.com/TomaGrade/libs/fileUploader/uploadManagerZip.php?Exam_ID="
-                     . $examidintg . "&TempDirName=" . $tempdir . "&UserID=" .$useridtable;
+                     . $examidintg . "&TempDirName=" . $tempdir . "&UserID=" . $config->tomagrade_username;
                 }
                 $ch = curl_init($url);
                 curl_setopt($ch, CURLOPT_URL, $url);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_HTTPHEADER,
-                 array('Content-Type: multipart/form-data',
-                  "x-apikey: $config->tomagrade_password", "x-userid: $config->tomagrade_username"));
+                            array('Content-Type: multipart/form-data', "x-apikey: $config->tomagrade_password", "x-userid: $config->tomagrade_username"));
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
