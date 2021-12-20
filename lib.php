@@ -31,11 +31,9 @@ if (!defined('MOODLE_INTERNAL')) {
 // Get global class.
 global $CFG;
 require_once($CFG->dirroot . '/plagiarism/lib.php');
-
 require_once($CFG->libdir.'/gradelib.php');
 
 // TomaGrade Class.
-
 function get_context_from_cmid($cmid) {
     try {
         $context = context_module::instance($cmid);
@@ -48,7 +46,6 @@ function get_context_from_cmid($cmid) {
     return $context;
 }
 function check_enabled() {
-
     $cfg = get_config('plagiarism_tomagrade');
     if (isset($cfg->enabled) && $cfg->enabled) {
         return true;
@@ -56,9 +53,7 @@ function check_enabled() {
     return false;
 }
 
-class plagiarism_plugin_tomagrade extends plagiarism_plugin
-{
-
+class plagiarism_plugin_tomagrade extends plagiarism_plugin{
     const GOODEXTENSIONS = array(
         "pdf" => "application/pdf",
         "doc" => "application/msword",
@@ -77,24 +72,18 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         $extension = strtolower($extension);
         $arr = array_keys(self::GOODEXTENSIONS);
         return in_array($extension, $arr);
-
     }
 
     public static function get_taodat_zaot($userid) {
         global $DB;
-
         $user = $DB->get_record('user', array('id' => $userid));
-
         return $user->idnumber;
     }
 
     public static function get_orbit_id($userid) {
         global $DB;
-
         $orbitiddata = $DB->get_records_sql("select o.orbitid from {import_interface_user} o JOIN {user} m ON o.username=m.username where m.id = ?", array($userid) );
-
         if (count($orbitiddata) > 0) {
-
             return reset($orbitiddata)->orbitid;
         } else {
             return -1;
@@ -103,9 +92,7 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
 
     public static function get_id_match_on_tg() {
         global $DB;
-
         $config = get_config('plagiarism_tomagrade');
-
         return $config->tomagrade_IDMatchOnTomagrade;
     }
 
@@ -113,7 +100,6 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         $digitsinthodatzaot = strlen($string);
         if ($zeros > $digitsinthodatzaot) {
             $zerostoadd = $zeros - $digitsinthodatzaot;
-
             for ($x = 0; $x < $zerostoadd; $x++) {
                  $string = "0".$string;
             }
@@ -121,12 +107,8 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         return $string;
     }
 
-
-
-
     public static function get_user_identifier($userid) {
         global $DB;
-
         $config = get_config('plagiarism_tomagrade');
         $user = $DB->get_record('user', array('id' => $userid));
         $output = "";
@@ -138,33 +120,21 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
             $output = $user->username;
         } else if ($config->tomagrade_DefaultIdentifier == self::IDENTIFIER_BY_ORBITID) {
             $output = $user->idnumber;
-
-            $orbitiddata = $DB->get_records_sql("select o.orbitid from {import_interface_user} o
-             JOIN {user} m ON o.username=m.username where m.id = ?", array($userid) );
-
+            $orbitiddata = $DB->get_records_sql("select o.orbitid from {import_interface_user} o JOIN {user} m ON o.username=m.username where m.id = ?", array($userid) );
             if (count($orbitiddata) > 0) {
-
                 $output = reset($orbitiddata)->orbitid;
             }
-
         } else if ($config->tomagrade_DefaultIdentifier == self::IDENTIFIER_BY_HUJIID) {
-
-            $hujiiddata = $DB->get_records_sql("SELECT hujiid FROM huji.userdata
-             INNER JOIN {user} u on idnumber=tz WHERE u.id=?", array($userid));
-
+            $hujiiddata = $DB->get_records_sql("SELECT hujiid FROM huji.userdata INNER JOIN {user} u on idnumber=tz WHERE u.id=?", array($userid));
             if (count($hujiiddata) > 0) {
-
                 $output = reset($hujiiddata)->hujiid;
             }
-
         }
 
         if (isset($config->tomagrade_DisplayStudentNameOnTG) && $config->tomagrade_DisplayStudentNameOnTG == "0") {
             return $output;
         }
-
-         $output = $output . " --- " . strip_tags($user->firstname) . " " . strip_tags($user->lastname);
-
+        $output = $output . " --- " . strip_tags($user->firstname) . " " . strip_tags($user->lastname);
         return $output;
     }
 
@@ -181,7 +151,6 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         } else if ($config->tomagrade_DefaultIdentifier_TEACHER == self::IDENTIFIER_BY_ID) {
             $newobject->identify = "TeacherID";
             $newobject->data = $user->idnumber;
-
             if (isset($config->tomagrade_zeroCompleteTeacher)) {
                 if (is_numeric($config->tomagrade_zeroCompleteTeacher)) {
                     $zeros = intval($config->tomagrade_zeroCompleteTeacher);
@@ -190,12 +159,10 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
                     }
                 }
             }
-
             return $newobject;
         } else if ($config->tomagrade_DefaultIdentifier_TEACHER == self::IDENTIFIER_BY_USERNAME) {
             $newobject->identify = "TeacherID";
             $newobject->data = $user->username;
-
             if (isset($config->tomagrade_zeroCompleteTeacher)) {
                 if (is_numeric($config->tomagrade_zeroCompleteTeacher)) {
                     $zeros = intval($config->tomagrade_zeroCompleteTeacher);
@@ -204,14 +171,11 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
                     }
                 }
             }
-
             return $newobject;
         } else if ($config->tomagrade_DefaultIdentifier_TEACHER == self::IDENTIFIER_BY_HUJIID) {
 
             $newobject->identify = "TeacherID";
-
             $newobject->data = $DB->get_field_sql("SELECT hujiid FROM huji.userdata WHERE tz=?", array($user->idnumber));
-
             if (isset($config->tomagrade_zeroCompleteTeacher)) {
                 if (is_numeric($config->tomagrade_zeroCompleteTeacher)) {
                     $zeros = intval($config->tomagrade_zeroCompleteTeacher);
@@ -220,13 +184,9 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
                     }
                 }
             }
-
             return $newobject;
-
         }
     }
-
-
     public static function get_user_id_by_identifier($identifier) {
         global $DB;
 
@@ -250,21 +210,16 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         }
 
         if ($identifiertable == "orbitid") {
-
-            $orbitiddata = $DB->get_records_sql("select m.id from {import_interface_user} o
-            JOIN {user} m ON o.username=m.username where o.orbitid = ?", array($identifier));
-
+            $orbitiddata = $DB->get_records_sql("select m.id from {import_interface_user} o JOIN {user} m ON o.username=m.username where o.orbitid = ?", array($identifier));
             if (count($orbitiddata) > 0) {
                 $userid = reset($orbitiddata)->id;
                 return array($userid);
             } else {
                 return false;
             }
-
         } else if ($identifiertable == "HUJIID") {
             $hujiiddata = $DB->get_records_sql("SELECT u.id FROM {user} u
             INNER JOIN huji.userdata on tz=idnumber where hujiid=?", array($identifier));
-
             if (count($hujiiddata) > 0) {
                 $userid = reset($hujiiddata)->id;
                 return array($userid);
@@ -275,6 +230,7 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         } else {
              $user = $DB->get_record('user', array($identifiertable => $identifier));
         }
+
         if ($user != false) {
             return array($user->id);
         }
@@ -296,19 +252,14 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         }
         return $returnarray;
     }
-
-
     const RUN_NO = 0;
     const RUN_MANUAL = 1;
     const RUN_IMMEDIATLY = 2;
     const RUN_AFTER_FIRST_DUE_DATE = 3;
-
     const ALL_SITE = false;
     const ACL = true;
-
     const KEN = 1;
     const LO = 0;
-
 
     const IDENTIFIER_BY_EMAIL = 0;
     const IDENTIFIER_BY_ID = 1;
@@ -331,7 +282,6 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
      *
      */
     public function get_links($linkarray) {
-
         if (isset($linkarray['file'])) {
             if ($linkarray['file']->get_filearea() == "introattachment") {
                 return;
@@ -339,11 +289,8 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
         }
 
         global $DB, $USER, $CFG;
-        if (check_enabled() &&
-         !isset($linkarray["forum"]) &&
-          isset($linkarray['file']) &&
-           isset($linkarray['cmid']) && isset($linkarray['userid'])) {
-
+        if (check_enabled() && !isset($linkarray["forum"]) &&
+          isset($linkarray['file']) && isset($linkarray['cmid']) && isset($linkarray['userid'])) {
             $cmid = $linkarray['cmid'];
             $userid = $linkarray['userid']; // Who uploaded -- could be admin.
             $file = $linkarray['file'];
@@ -373,9 +320,7 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
                 return $result;
             } else {
                 // Uploaded but not when moodle was activated.
-
                 $mimetype = $linkarray["file"]->get_mimetype();
-
                 $ext = "";
                 $arr = explode("/", $mimetype);
                 if (count($arr) == 2) {
@@ -392,7 +337,6 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
                     . html_writer::link($CFG->wwwroot . '/plagiarism/tomagrade/uploadFile.php' . $urlbuild,
                      get_string('Upload_to_TomaGrade_again', 'plagiarism_tomagrade'), array("target" => "_blank"));
                 }
-
                 return "<br> " . html_writer::link($CFG->wwwroot . '/plagiarism/tomagrade/uploadFile.php' . $urlbuild, "Submit to Toma Grade ", array("target" => "_blank"));
             }
         }
@@ -435,100 +379,86 @@ class plagiarism_plugin_tomagrade extends plagiarism_plugin
             }
             $urlopenexam = $CFG->wwwroot . '/plagiarism/tomagrade/openexam.php';
             $urlreupload = $CFG->wwwroot . '/plagiarism/tomagrade/uploadFile.php';
-            return '
-        <style>
-            .link{
-                text-decoration:none;
-                color:green;
-            }
-            .link:hover{
-                text-decoration:none;
-                color:green;
-            }
-            .linkgetfile{
-                color:black;
-            }
-            .tgname{
-                font-size: 105%;
-            }
-            </style>
-        <script>
-        setTimeout(function(){
-            let urlopenexam = "' . $urlopenexam . '"
-            let urlreupload = "' . $urlreupload . '"
-            let cmid = ' . $cm->id . '
-            let location = 5;
-            let x = document.querySelectorAll("tr");
-            let thead = document.getElementsByTagName("table")[0].tHead.children[0];
-            th = document.createElement("th");
-            th.className = "header c"+(x.length + 2)
-            th.innerHTML = "TomaGrade";
-            // // thead.appendChild(th);
-            thead.insertBefore(th,thead.children[location])
-            // th.insertAfter(x)
-            let y = document.querySelectorAll("tr");
-            let users = JSON.parse(`' . json_encode($userids) . '`)
-            console.log(users)
-
-            y.forEach((tr,index) => {
-                let tbody = y[index];
-                td = document.createElement("td");
-                td.className = "";
-                if (index != 0){
-                    let className = tr.className;
-                    let userID = className.split(" ")[0].substring(4);
-                    if (isNaN(userID)) return;
-                    let currentUser = users[userID];
-                    console.log(userID);
-                    if (currentUser){
-                        let preHTML = ""
-                        let urlToOpenGrade = urlopenexam + "?cmid="+cmid
-                        let urlreuploadTG = urlreupload + "?cmid="+cmid
-                        if(currentUser.groupid != null){
-                            urlToOpenGrade += "&groupid="+currentUser.groupid;
-                            urlreuploadTG += "&groupid="+currentUser.groupid;
-                        }else{
-                            urlToOpenGrade += "&studentid="+currentUser.userid;
-                            urlreuploadTG += "&studentid="+currentUser.userid;
-                        }
-                        let textToReUpload = "'. get_string('Upload_to_TomaGrade', 'plagiarism_tomagrade') . '";
-                        if (currentUser["status"] == 0){
-
-                        }else{
-                            preHTML = \'<div id="TomaGrade"><br><a class="link" href=\'+ urlToOpenGrade +\' target="_blank" >'
-                            . get_string('Check_with', 'plagiarism_tomagrade') .'<img style="padding-bottom:15px;" src="' . $CFG->wwwroot .
-                             '/plagiarism/tomagrade/pix/icon.png" alt="Go to TomaGrade!"></a></div>\'
-                            textToReUpload = "'. get_string('Upload_to_TomaGrade_again', 'plagiarism_tomagrade') .'"
-                        }
-                        preHTML+= \'<div> <a target="_blank" href="\' + urlreuploadTG + \'">\' + textToReUpload + \' </a> </div>\'
-                        td.innerHTML = preHTML;
-                        // thead.appendChild(td);
-                    }else{
-                        td.innerHTML = "<p>'.  get_string('TomaGrade_did_not_recognise_any_file', 'plagiarism_tomagrade')  .'</p>";
-                    }
-                    tbody.insertBefore(td,tbody.children[location])
-                }
-
-            })
-            // for(let i = 0; i < x.length; i++){
-            //     if(x[i].className.indexOf("user") != -1 && x[i].className.indexOf("checked") == -1){
-            //         x[i].childNodes[5].insertAdjacentHTML("beforeend","<p>The grade has not been submitted yet.</p>");
-            //     }
-            // }
-        },1000)
-        </script>';
+            return '<style> '.
+                        '.link{ '.
+                            'text-decoration:none; '.
+                            'color:green; '.
+                        '} '.
+                        '.link:hover{ '.
+                            'text-decoration:none; '.
+                            'color:green; '.
+                        '} '.
+                        '.linkgetfile{ '.
+                            'color:black; '.
+                        '} '.
+                        '.tgname{ '.
+                            'font-size: 105%; '.
+                        '} '.
+                    '</style> '.
+                    '<script> '.
+                        'setTimeout(function(){ '.
+                            'let urlopenexam = "' . $urlopenexam . '" '.
+                            'let urlreupload = "' . $urlreupload . '" '.
+                            'let cmid = ' . $cm->id . ' '.
+                            'let location = 5; '.
+                            'let x = document.querySelectorAll("tr"); '.
+                            'let thead = document.getElementsByTagName("table")[0].tHead.children[0]; '.
+                            'th = document.createElement("th"); '.
+                            'th.className = "header c"+(x.length + 2) '.
+                            'th.innerHTML = "TomaGrade"; '.
+                            'thead.insertBefore(th,thead.children[location]) '.
+                            'let y = document.querySelectorAll("tr"); '.
+                            'let users = JSON.parse(`' . json_encode($userids) . '`) '.
+                            'console.log(users) '.
+                            'y.forEach((tr,index) => { '.
+                                'let tbody = y[index]; '.
+                                'td = document.createElement("td"); '.
+                                'td.className = ""; '.
+                                'if (index != 0){ '.
+                                    'let className = tr.className; '.
+                                    'let userID = className.split(" ")[0].substring(4); '.
+                                    'if (isNaN(userID)) return; '.
+                                    'let currentUser = users[userID]; '.
+                                    'console.log(userID); '.
+                                    'if (currentUser){ '.
+                                        'let preHTML = "" '.
+                                        'let urlToOpenGrade = urlopenexam + "?cmid="+cmid '.
+                                        'let urlreuploadTG = urlreupload + "?cmid="+cmid '.
+                                        'if(currentUser.groupid != null){ '.
+                                            'urlToOpenGrade += "&groupid="+currentUser.groupid; '.
+                                            'urlreuploadTG += "&groupid="+currentUser.groupid; '.
+                                        '}else{ '.
+                                            'urlToOpenGrade += "&studentid="+currentUser.userid; '.
+                                            'urlreuploadTG += "&studentid="+currentUser.userid; '.
+                                        '} '.
+                                        'let textToReUpload = "'. get_string('Upload_to_TomaGrade', 'plagiarism_tomagrade') . '"; '.
+                                        'if (currentUser["status"] == 0){ '.
+                                        '}else{ '.
+                                            'preHTML = \'<div id="TomaGrade"><br><a class="link" href=\'+ urlToOpenGrade +\' target="_blank" >'
+                                            . get_string('Check_with', 'plagiarism_tomagrade') .'<img style="padding-bottom:15px;" src="' . $CFG->wwwroot .
+                                            '/plagiarism/tomagrade/pix/icon.png" alt="Go to TomaGrade!"></a></div>\' '.
+                                            'textToReUpload = "'. get_string('Upload_to_TomaGrade_again', 'plagiarism_tomagrade') .'" '.
+                                        '} '.
+                                        'preHTML+= \'<div> <a target="_blank" href="\' + urlreuploadTG + \'">\' + textToReUpload + \' </a> </div>\' '.
+                                        'td.innerHTML = preHTML; '.
+                                    '}else{ '.
+                                        'td.innerHTML = "<p>'.  get_string('TomaGrade_did_not_recognise_any_file', 'plagiarism_tomagrade')  .'</p>"; '.
+                                    '} '.
+                                    'tbody.insertBefore(td,tbody.children[location]) '.
+                                '} '.
+                            '}) '.
+                        '},1000) '.
+                    '</script>';
         }
     }
 }
-    /* hook to save plagiarism specific settings on a module settings page
-     * @param object $data - data from an mform submission.
-    */
+/* hook to save plagiarism specific settings on a module settings page
+    * @param object $data - data from an mform submission.
+*/
 function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
     global $DB, $USER;
     if (check_enabled()) {
-
         $config = get_config('plagiarism_tomagrade');
-
         $cmid = $data->coursemodule;
         $oldinformation = tomagrade_get_instance_config($cmid);
         if (isset($data->tomagrade_upload)) {
@@ -555,12 +485,10 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
               isset($data->tomagrade_idmatchontg) &&
                ($oldinformation->idmatchontg != $data->tomagrade_idmatchontg))) {
                 $examidintg = calc_exam_id_in_tg($cmid, isset($data->tomagrade_idmatchontg) ? $data->tomagrade_idmatchontg : "0");
-
                 if ($isexam == false) {
                     $isexamidtafus = is_exam_exists_in_tg($examidintg);
                     if ($isexamidtafus) {
                         $examidintg = calc_exam_id_in_tg($cmid, $data->tomagrade_idmatchontg);
-
                         $isexamidtafus = is_exam_exists_in_tg($examidintg);
                         if ($isexamidtafus) {
                             \core\notification::error('Tomagrade error, try again later');
@@ -579,26 +507,19 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
             }
             // To get teacherID.
             if ($config->tomagrade_DefaultIdentifier_TEACHER == plagiarism_plugin_tomagrade::IDENTIFIER_BY_EMAIL) {
-
                 $id = $connection->get_teacher_code_from_email($data->tomagrade_username);
-
             } else if ($config->tomagrade_DefaultIdentifier_TEACHER == plagiarism_plugin_tomagrade::IDENTIFIER_BY_ID) {
-
                 $ownerrow = $DB->get_record_sql(" select idnumber from {user} where lower(email) = ? ",
                  array(strtolower($data->tomagrade_username)));
                 $id = $ownerrow->idnumber;
                 if ($id == null) {
                     $id = 1;
                 }
-
             } else if ($config->tomagrade_DefaultIdentifier_TEACHER == plagiarism_plugin_tomagrade::IDENTIFIER_BY_USERNAME) {
-
                 $ownerrow = $DB->get_record_sql(" select username from {user} where lower(email) = ? ",
                  array(strtolower($data->tomagrade_username)));
                 $id = $ownerrow->username;
-
             } else if ($config->tomagrade_DefaultIdentifier_TEACHER == plagiarism_plugin_tomagrade::IDENTIFIER_BY_HUJIID) {
-
                 $ownerrow = $DB->get_record_sql(" SELECT hujiid FROM {user} u INNER JOIN huji.userdata ON idnumber=tz WHERE lower(u.email) = ?",
                  array(strtolower($data->tomagrade_username)));
                 $id = $ownerrow->hujiid;
@@ -616,7 +537,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
             $courseinfo = $DB->get_record('course', array('id' => $data->course));
             $coursename = $courseinfo->shortname;
             $examdate = date('d/m/Y', $data->duedate);
-
             if (isset($data->tomagrade_idmatchontg) == false ||  is_null($data->tomagrade_idmatchontg)) {
                 $data->tomagrade_idmatchontg = 0;
             }
@@ -625,44 +545,32 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                 if ($config->tomagrade_AllowOnlyIdMatchOnTG == "1" &&
                  $data->tomagrade_idmatchontg == "0" &&
                   $data->tomagrade_upload != "0") {
-
                     $data->tomagrade_upload = "0";
-
                     \core\notification::error('For TomaGrade settings, please select compatible course on ID Match On TomaGrade ');
                     return null;
-
                 }
             }
-
             $donotchangeusername = false;
             if (intval($data->tomagrade_idmatchontg) == 0) {
                 $response = $connection->get_request("MoodleGetExamDetails", "/$examidintg");
                 $responsedecoded = json_decode($response);
-
                 if (isset($responsedecoded->GetExamDetail->ExternalTeacherID) &&
                  isset($responsedecoded->GetExamDetail->ExamStatus) &&
                   $responsedecoded->GetExamDetail->ExamStatus > 0) {
                     // Exam is already exists and in status > 0 , do not change the teacher code.
                     $id = $responsedecoded->GetExamDetail->ExternalTeacherID;
                     $donotchangeusername = true;
-
                     \core\notification::error( get_string('exam_is_already_exists_and_in_status_gt_zero', 'plagiarism_tomagrade'));
                 }
-
                 $iscreateusers = isset($config->tomagrade_createUsers) && $config->tomagrade_createUsers == 1;
-
                 $identifybyemail = true;
                 if ($config->tomagrade_DefaultIdentifier_TEACHER != 0) {
                     $identifybyemail = false;
                 }
-
                 if ($iscreateusers) {
-
                     $checkidsexists = array();
                     $teachersemailsarray = array();
-
                     $teachersissarray = array();
-
                     $idinmoddle = $DB->get_record_sql(" select id from {user} where email = ? ", array($data->tomagrade_username));
                     $idinmoddle = $idinmoddle->id;
                     array_push($checkidsexists, "'".$idinmoddle."'");
@@ -675,23 +583,17 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                             array_push($checkidsexists, "'".$teacherid."'");
                         }
                     }
-
                     $emailtoidnumber = array();
                     $emailtodetails = array();
-
                     if (count($checkidsexists) > 0) {
-
                         if ($config->tomagrade_DefaultIdentifier_TEACHER != 4) {
-                            $teachersarr = $DB->get_records_sql("
-                            SELECT email,idnumber,firstname,lastname,lang,username
-                             from {user} where id in (". implode(",", $checkidsexists) .") ");
+                            $teachersarr = $DB->get_records_sql("SELECT email,idnumber,firstname,lastname,lang,username ".
+                                                                "from {user} where id in (". implode(",", $checkidsexists) .") ");
                         } else {
-                            $teachersarr = $DB->get_records_sql("
-                            SELECT email,firstname,lastname,lang,username,hujiid as idnumber
-                             from {user} u inner join huji.userdata h on u.idnumber=h.tz
-                              where u.id in (". implode(",", $checkidsexists) .") ");
+                            $teachersarr = $DB->get_records_sql("SELECT email,firstname,lastname,lang,username,hujiid as idnumber ".
+                                                                "from {user} u inner join huji.userdata h on u.idnumber=h.tz ".
+                                                                "where u.id in (". implode(",", $checkidsexists) .") ");
                         }
-
                         foreach ($teachersarr as $row) {
                             array_push($teachersemailsarray, $row->email);
                             if ($config->tomagrade_DefaultIdentifier_TEACHER != 2) {
@@ -701,7 +603,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                 array_push($teachersissarray, $row->username);
                                 $emailtoidnumber[$row->email] = $row->username;
                             }
-
                             $emailtodetails[$row->email] = array();
                             $emailtodetails[$row->email]['firstName'] = $row->firstname;
                             $emailtodetails[$row->email]['lastName'] = $row->lastname;
@@ -709,34 +610,27 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                             $emailtodetails[$row->email]['username'] = $row->username;
 
                         }
-
                         $postdata = array();
                         $postdata['emails'] = $teachersemailsarray;
                         $response = $connection->post_request("GetTeacherIdMoodle", json_encode($postdata));
                         if (isset($response['Message']) && is_array($response['Message'])) {
-
                             $arrayteachersemailsandteachercode = $response['Message'];
                             $emailthatexists = array();
-
                             foreach ($arrayteachersemailsandteachercode as $teacher) {
                                 $emailthatexists[$teacher['Email']] = true;
                             }
-
                             $postdata = array();
                             $postdata['teacherCodes'] = $teachersissarray;
                             $response = $connection->post_request("GetTeacherIdMoodle", json_encode($postdata));
                             if (isset($response['Message']) && is_array($response['Message'])) {
-
                                 $arrayteachersemailsandteachercode = $response['Message'];
                                 $teachercodeexists = array();
-
                                 foreach ($arrayteachersemailsandteachercode as $teacher) {
                                     $teachercodeexists[$teacher['ExternalTeacherID']] = true;
                                 }
 
                                 $postdata = array();
                                 $postdata['usersData'] = array();
-
                                 foreach ($teachersemailsarray as $potentialusertoadd) {
                                     if (isset($emailthatexists[$potentialusertoadd]) == false) {
                                         if (isset($emailtoidnumber[$potentialusertoadd])) {
@@ -747,7 +641,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                                 $user['LastName'] = $emailtodetails[$potentialusertoadd]['lastName'];
                                                 $user['RoleID'] = 0;
                                                 $user['TeacherCode'] = $emailtoidnumber[$potentialusertoadd];
-
                                                 if (empty($user['TeacherCode']) ||
                                                  empty($user['FirstName']) == true ||
                                                   empty($user['LastName']) == true) {
@@ -756,7 +649,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                                          . " " . $emailtodetails[$potentialusertoadd]['username']);
                                                     continue;
                                                 }
-
                                                 if ($emailtodetails[$potentialusertoadd]['lang'] == "he") {
                                                     $user['Language'] = "עברית";
                                                 } else {
@@ -764,14 +656,11 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                                 }
                                                 $user['IsOTP'] = 0;
                                                 $user['choose'] = "insertNewUser";
-
                                                 array_push($postdata['usersData'], $user);
                                             } else {
                                                 if ($identifybyemail) {
                                                     // Identify by email, email does not exists but teacher code exists.
-
                                                     // Error teacher code already exists in TomaGrade for user.
-
                                                     \core\notification::error(
                                                          get_string('error_during_creating_new_user_in_tomagrade_teacher_code_already_exists', 'plagiarism_tomagrade')
                                                           . " " . $emailtodetails[$potentialusertoadd]['username']);
@@ -785,12 +674,9 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                             if (isset($emailtoidnumber[$potentialusertoadd])) {
                                                 if (isset($teachercodeexists[$emailtoidnumber[$potentialusertoadd]]) == false) {
                                                     // Teacher code does not exist.
-
-                                                        // Error email already exists in TomaGrade for user.
-
-                                                        \core\notification::error(
-                                                        get_string('error_during_creating_new_user_in_tomagrade_email_already_exists',
-                                                         'plagiarism_tomagrade') . " " . $emailtodetails[$potentialusertoadd]['username']);
+                                                    // Error email already exists in TomaGrade for user.
+                                                    \core\notification::error(get_string('error_during_creating_new_user_in_tomagrade_email_already_exists',
+                                                        'plagiarism_tomagrade') . " " . $emailtodetails[$potentialusertoadd]['username']);
                                                 }
                                             }
                                         }
@@ -798,7 +684,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                 }
                             }
                         }
-
                         $numofuserstoadd = count($postdata['usersData']);
                         if ($numofuserstoadd > 0) {
                             $result = $connection->post_request("SaveUsers", json_encode($postdata));
@@ -806,49 +691,38 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                                  \core\notification::error( get_string('error_during_creating_new_user_in_tomagrade',
                                   'plagiarism_tomagrade'));
                             }
-
                         }
-
                     }
-
                 }
 
-                    $examname = strip_tags($data->name);
-                    $coursenametosend = strip_tags($coursename);
-                    $examname = str_replace('"', '', $examname);
-                    $coursenametosend = str_replace('"', '', $coursenametosend);
-
-                    $postdata = array();
-                    $coursesdata = array();
-
-                    $coursesdataitem = array();
-                    $coursesdataitem['Exam_ID'] = $examidintg;
-                    $coursesdataitem['MoedName'] = -1;
-                    $coursesdataitem['SemesterName'] = -1;
-                    $coursesdataitem['Year'] = -1;
-                    $coursesdataitem['Exam_Name'] = $examname;
-                    $coursesdataitem['Exam_Date'] = $examdate;
-                    $coursesdataitem['Course'] = $coursenametosend;
-                    $coursesdataitem['TeacherCode'] = $id;
-                    $coursesdataitem['source'] = "moodle_assign";
-                    $coursesdataitem['choose'] = "0";
-                    array_push($coursesdata, $coursesdataitem);
-
-                    $postdata['CoursesData'] = $coursesdata;
-
+                $examname = strip_tags($data->name);
+                $coursenametosend = strip_tags($coursename);
+                $examname = str_replace('"', '', $examname);
+                $coursenametosend = str_replace('"', '', $coursenametosend);
+                $postdata = array();
+                $coursesdata = array();
+                $coursesdataitem = array();
+                $coursesdataitem['Exam_ID'] = $examidintg;
+                $coursesdataitem['MoedName'] = -1;
+                $coursesdataitem['SemesterName'] = -1;
+                $coursesdataitem['Year'] = -1;
+                $coursesdataitem['Exam_Name'] = $examname;
+                $coursesdataitem['Exam_Date'] = $examdate;
+                $coursesdataitem['Course'] = $coursenametosend;
+                $coursesdataitem['TeacherCode'] = $id;
+                $coursesdataitem['source'] = "moodle_assign";
+                $coursesdataitem['choose'] = "0";
+                array_push($coursesdata, $coursesdataitem);
+                $postdata['CoursesData'] = $coursesdata;
                 $result = $connection->post_request("SaveCourses", json_encode($postdata));
-
                 $log = "the assign has been saved";
 
                 if (isset($result["Message"]) == false) {
-
                     $log = get_string('tomagrade_id_email_incorrect', 'plagiarism_tomagrade');
                     echo "<script>alert('$log');</script>";
                     \core\notification::error($log);
                 } else if (strpos($result["Message"], "NoTeacher") !== false ||
-                 (strpos($result["Message"], "#New Exam: 0") !== false &&
-                  strpos($result["Message"], "#Updated Exam: 0") !== false)) {
-
+                        (strpos($result["Message"], "#New Exam: 0") !== false && strpos($result["Message"], "#Updated Exam: 0") !== false)) {
                     $log = get_string('tomagrade_id_email_incorrect', 'plagiarism_tomagrade');
                     if (isset($result["Message"])) {
                         $log = $log . "" . $result["Message"];
@@ -856,7 +730,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                     echo "<script>alert('$log');</script>";
                     \core\notification::error($log);
                 } else if (isset($result["Response"]) && $result["Response"] == "Failed") {
-
                     $log = "error ";
                     if (isset($result["Message"])) {
                         $log = $log . "" . $result["Message"];
@@ -864,36 +737,27 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                     echo "<script>alert('$log');</script>";
                     \core\notification::error($log);
                 }
-
             } else {
                 $log = "the exam has been linked";
             }
 
-            $event = \plagiarism_tomagrade\event\assigns_savedInTG::create(array(
-            'context' => context_module::instance($data->coursemodule),
-            'other' => $log
-            ));
+            $event = \plagiarism_tomagrade\event\assigns_savedInTG::create(array('context' => context_module::instance($data->coursemodule),'other' => $log));
             $event->trigger();
-
             $doanonymouscheck = true;
-
             if (isset($config->tomagrade_keepBlindMarking)) {
                 if (intval($config->tomagrade_keepBlindMarking) == 0) {
                     $doanonymouscheck = false;
                 }
             }
-
             if ($doanonymouscheck) {
                 if ($data->blindmarking != "0" || intval($data->tomagrade_idmatchontg) <= 0) {
                     $anonymousbool = false;
                     if ($data->blindmarking == "1") {
                         $anonymousbool = true;
                     }
-
                     $postdata = array();
                     $postdata['ExamID'] = $examidintg;
                     $postdata['Anonymous'] = $anonymousbool;
-
                     $result = $connection->post_request("SetExamAnonymous", json_encode($postdata));
                     if (isset($result["Response"]) == false || $result["Response"] == "Failed") {
                         \core\notification::error('Error during setting exam anonymous in TomaGrade');
@@ -904,7 +768,6 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
             // Share teachers.
             $tomagradeshareaddioionalteachers = "";
             $tomagradeshareaddioionalteachersisfirst = true;
-
             $changedinsharedteacher = false;
 
             // Avoid share for related tg user.
@@ -932,9 +795,7 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                     }
                     continue;
                 }
-
             }
-
             if (isset($oldinformation->share_teachers) && $oldinformation->share_teachers != $tomagradeshareaddioionalteachers) {
                 $changedinsharedteacher = true;
             } else if (isset($oldinformation->share_teachers) == false && empty($tomagradeshareaddioionalteachers) == false) {
@@ -942,14 +803,11 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
             }
 
             $errorinshareteachersync = false;
-
             if ($changedinsharedteacher) {
                 $identifybyemail = true;
-
                 if ($config->tomagrade_DefaultIdentifier_TEACHER != 0) {
                         $identifybyemail = false;
                 }
-
                 // Delete teachers from share.
                 $teacherstodeletestr = "";
                 if (empty($oldinformation->share_teachers) == false) {
@@ -958,43 +816,31 @@ function plagiarism_tomagrade_coursemodule_edit_post_actions($data, $course) {
                         $newshare = explode(",", $tomagradeshareaddioionalteachers);
                     }
                     $oldshare = explode(",", $oldinformation->share_teachers);
-
                     $teacherstodelete = array();
                     foreach ($oldshare as $id) {
                         if (in_array($id, $newshare) == false) {
                             array_push($teacherstodelete, $id);
                         }
                     }
-
                     if (count($teacherstodelete) > 0) {
                         // There are teachers that were removed from share.
-
                         $teacherstodeletestr = implode(",", $teacherstodelete);
-
                     }
-
                 }
-
-                    $examidintg = $examidintg;
-
+                $examidintg = $examidintg;
                 // Share teachers.
                 if (empty($tomagradeshareaddioionalteachers) == false || empty($teacherstodeletestr) == false) {
                     $errorinshareteachersync = share_teachers($tomagradeshareaddioionalteachers,
                      $teacherstodeletestr, $identifybyemail, $examidintg);
                     $errorinshareteachersync = !$errorinshareteachersync;
                 }
-
             }
-
             $config = new stdClass();
             $config->upload = $data->tomagrade_upload;
             $config->idmatchontg = $data->tomagrade_idmatchontg;
             $config->examid = $examidintg;
-
-            $ownerrow = $DB->get_record_sql(" select id from {user} where lower(email) = ? ",
-             array(strtolower($data->tomagrade_username)));
+            $ownerrow = $DB->get_record_sql(" select id from {user} where lower(email) = ? ", array(strtolower($data->tomagrade_username)));
             $config->username = $ownerrow->id;
-
             if ($errorinshareteachersync == false) {
                     $config->share_teachers = $tomagradeshareaddioionalteachers;
             } else {
@@ -1059,9 +905,7 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
 
             $mform->addElement('header', 'tomaplagdesc', "TomaGrade");
             $mform->addElement('select', 'tomagrade_upload', get_string('Enable_TomaGrade', 'plagiarism_tomagrade'), $tomaplagopts);
-
             $config = get_config('plagiarism_tomagrade');
-
             $courses = array("0" => get_string('Irrelevant_regular_assignment', 'plagiarism_tomagrade'));
 
             if (isset($config->tomagrade_AllowOnlyIdMatchOnTG)) {
@@ -1071,9 +915,7 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
             }
 
             $connection = new tomagrade_connection;
-
             $teachercode2 = plagiarism_plugin_tomagrade::get_teacher_identifier($USER->id);
-
             $cmid = optional_param('update', 0, PARAM_INT);
 
             if (isset($cmid) && $cmid != 0) {
@@ -1105,10 +947,8 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
             $teachercodetoemail = array();
             $teachersemailtoidinmoodle = array();
             $idinmoodletoemail = array();
-
             $iscurrentownerexistsinteacherslist = false;
             $isloggeduserexistsinteacherslist = false;
-
             $loggeduseridnumber = $USER->idnumber;
 
             if ($teacherszero > 0) {
@@ -1117,34 +957,25 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
 
             if (isset($config->tomagrade_userRolesToDisplayRelatedAssign) == true &&
              $config->tomagrade_userRolesToDisplayRelatedAssign != "") {
-                $teachersarr = $DB->get_records_sql("
-                SELECT DISTINCT   u.id, u.username, u.firstname, u.lastname, lower(u.email) as email, u.idnumber
-                FROM {role_assignments} ra, {user} u, {course} c, {context} cxt
-                WHERE ra.userid = u.id
-                AND ra.contextid = cxt.id
-                AND cxt.contextlevel =50
-                AND cxt.instanceid = c.id
-                AND c.id = :instanceid
-                AND roleid in  ($config->tomagrade_userRolesToDisplayRelatedAssign)  ",
-                 array('instanceid' => $context->instanceid));
-
+                $teachersarr = $DB->get_records_sql("SELECT DISTINCT   u.id, u.username, u.firstname, u.lastname, lower(u.email) as email, u.idnumber ".
+                    "FROM {role_assignments} ra, {user} u, {course} c, {context} cxt ".
+                    "WHERE ra.userid = u.id ".
+                    "AND ra.contextid = cxt.id ".
+                    "AND cxt.contextlevel =50 ".
+                    "AND cxt.instanceid = c.id ".
+                    "AND c.id = :instanceid ".
+                    "AND roleid in  ($config->tomagrade_userRolesToDisplayRelatedAssign)  ",
+                     array('instanceid' => $context->instanceid));
                 $idnumbertohuji = array();
-
                 if ($config->tomagrade_DefaultIdentifier_TEACHER == 4) {
                     $arrteachersids = array();
-
                     foreach ($teachersarr as $teacher) {
                         array_push($arrteachersids, '"'.$teacher->idnumber.'"');
                     }
-
-                    $hujiarr = $DB->get_records_sql("
-                    SELECT tz, hujiid FROM  huji.userdata where tz in (". implode(",", $arrteachersids) ." )");
-
+                    $hujiarr = $DB->get_records_sql("SELECT tz, hujiid FROM  huji.userdata where tz in (". implode(",", $arrteachersids) ." )");
                     foreach ($hujiarr as $huji) {
                         $idnumbertohuji[$huji->tz] = $huji->hujiid;
-
                     }
-
                 }
 
                 foreach ($teachersarr as $teacher) {
@@ -1232,7 +1063,6 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
             if ($config->tomagrade_DefaultIdentifier_TEACHER != 0) {
                 $identifybyemail = false;
             }
-
             $postdata = array();
             if ($identifybyemail) {
                 $postdata['emails'] = $teachersemailsarray;
@@ -1241,9 +1071,7 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
             }
 
             $response = $connection->post_request("GetTeacherIdMoodle", json_encode($postdata));
-
             $arrayteachersemailsandteachercode = $response['Message'];
-
             $emailteachercodemap = array();
             $teachercodeexists = array();
 
@@ -1251,15 +1079,11 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 $emailteachercodemap[strtolower($teacher['Email'])] = $teacher['ExternalTeacherID'];
                 $teachercodeexists[$teacher['ExternalTeacherID']] = true;
             }
-
             $teachersthatexistsintm = array();
             $teachersidsthatexistsintm = array();
-
             $isloggeduserexistsintm = true;
 
-            $select = $mform->createElement('select', 'tomagrade_username',
-             get_string('Related_TomaGrade_User', 'plagiarism_tomagrade'));
-
+            $select = $mform->createElement('select', 'tomagrade_username',get_string('Related_TomaGrade_User', 'plagiarism_tomagrade'));
             $iscreateusers = isset($config->tomagrade_createUsers) && $config->tomagrade_createUsers == 1;
 
             foreach ($teachers as $value => $label) {
@@ -1281,7 +1105,6 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 }
             }
             $mform->addElement($select);
-
             if (isset($cmid) == false || $cmid == 0) {
                 // This is a new course.
                 if ($isloggeduserexistsintm) {
@@ -1290,32 +1113,25 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
 
             }
 
-            if (isset($config->tomagrade_IDMatchOnTomagrade) &&
-             $config->tomagrade_IDMatchOnTomagrade != plagiarism_plugin_tomagrade::INACTIVE) {
-
+            if (isset($config->tomagrade_IDMatchOnTomagrade) && $config->tomagrade_IDMatchOnTomagrade != plagiarism_plugin_tomagrade::INACTIVE) {
                 // Courses list.
                 $paramstosend = "/".$teachercode2->data;
                 if (isset($config->tomagrade_MatchingDue) && isset($cmid)) {
                     if (is_null($config->tomagrade_MatchingDue) == false) {
                         if (is_numeric($config->tomagrade_MatchingDue)) {
                             if ($config->tomagrade_MatchingDue > 0) {
-
-                                $duedatestring = $DB->get_records_sql("
-                                select a.duedate from {course_modules} c
-                                 inner join {assign} a on c.instance = a.id where c.id = ?",
-                                  array($cmid));
+                                $duedatestring = $DB->get_records_sql(
+                                    "select a.duedate from {course_modules} c inner join {assign} a on c.instance = a.id where c.id = ?",
+                                    array($cmid));
                                 if (is_array($duedatestring)) {
                                     $duedate = reset($duedatestring);
                                     if (isset($duedate->duedate)) {
                                         $timestring = $duedate->duedate;
-
                                         // ParamsToSend parm is not in use anymore, just for testing old versions.
                                         $paramstosend = $paramstosend . "/" . $config->tomagrade_MatchingDue . "/" . $timestring;
                                     }
-
                                 }
                             }
-
                         }
                     }
                 }
@@ -1324,7 +1140,6 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 foreach ($teachersthatexistsintm as $email => $name) {
                     array_push($teachersemailsarray, $email);
                 }
-
                 $postdata = array();
 
                 if ($identifybyemail) {
@@ -1349,17 +1164,12 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 }
 
                 $response = $connection->post_request("MoodleGetExamsList", json_encode($postdata), true);
-
                 $response = json_decode($response, true);
-
                 $examsbyteachersmap = array();
-
-                $existingexams = $DB->get_records_sql("
-                select distinct idmatchontg from {plagiarism_tomagrade_config} where idmatchontg != '0' ");
+                $existingexams = $DB->get_records_sql("select distinct idmatchontg from {plagiarism_tomagrade_config} where idmatchontg != '0' ");
                 $existingexamsmap = array();
 
                 foreach ($existingexams as $exam) {
-
                     $existingexamsmap[$exam->idmatchontg] = true;
                 }
 
@@ -1372,12 +1182,9 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 }
 
                 $ischoosenexaminlist = false;
-
                 if (isset($response['Exams'])) {
-
                     foreach ($response['Exams'] as $exam) {
                         $stringforexam = $exam['ExamID'];
-
                         if (isset( $data->idmatchontg)) {
                             if ($exam['ExamID'] == $data->idmatchontg ) {
                                 $ischoosenexaminlist = true;
@@ -1385,7 +1192,6 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                         }
 
                         $exam['Email'] = strtolower($exam['Email']);
-
                         if (isset($existingexamsmap[$stringforexam]) == false) {
                             if (isset($exam['CourseID'])) {
                                 $stringforexam = $stringforexam . " , ";
@@ -1436,17 +1242,13 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 }
 
                 if (isset( $data->idmatchontg) && $ischoosenexaminlist == false ) {
-
                     if ($data->idmatchontg != '0' && $data->idmatchontg != '' && is_null($data->idmatchontg) == false) {
-
                         $response = $connection->get_request("MoodleGetExamDetails", "/$data->idmatchontg");
-
                         $responsedecoded = json_decode($response);
 
                         if (isset($responsedecoded->Response) == true &&
                          isset($responsedecoded->GetExamDetail->Exam_Name) == true) {
                             $exam = $responsedecoded->GetExamDetail;
-
                             $stringforexam = $data->idmatchontg;
 
                             if (isset($exam->Courses)) {
@@ -1478,9 +1280,7 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                                 $stringforexam = $stringforexam . " , " . get_string('moed', 'plagiarism_tomagrade') .": ";
                                 $stringforexam = $stringforexam . $exam->Moed;
                             }
-
                             $courses[$data->idmatchontg] = $stringforexam;
-
                             if (isset($data->username)) {
                                 $teacheremailinmoodle = $data->username;
 
@@ -1489,14 +1289,11 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                                 }
                                 $examsbyteachersmap[$teacheremailinmoodle][$data->idmatchontg] = $stringforexam;
                             }
-
                         }
                     }
                 }
 
-                $mform->addElement('select', 'tomagrade_idmatchontg',
-                 get_string('ID_Match_On_Tomagrade', 'plagiarism_tomagrade'), $courses);
-
+                $mform->addElement('select', 'tomagrade_idmatchontg', get_string('ID_Match_On_Tomagrade', 'plagiarism_tomagrade'), $courses);
                 $buildjsteachersmap = "var teachersmap = {}; ";
                 foreach ($examsbyteachersmap as $teacher => $value) {
                     $buildjsteachersmap = $buildjsteachersmap . " var examArr = {}; ";
@@ -1560,9 +1357,7 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                                 break;
                         }
                     }
-
                 }
-
 
                 function cleanSelectOptions() {
                     var select = document.getElementById('id_tomagrade_idmatchontg');
@@ -1581,7 +1376,6 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                     var exams = teachersHashMap[email];
                     var select = document.getElementById('id_tomagrade_idmatchontg');
 
-
                     if (exams == null || exams == undefined) { return; }
 
                     Object.keys(exams).forEach( function (exam) {
@@ -1590,11 +1384,9 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                         opt.innerHTML = exams[exam];
                         select.appendChild(opt);
                     });
-
                 }
 
                 </script>");
-
             }
 
             if (count($teachersemailtoidinmoodle) > 0) {
@@ -1612,14 +1404,12 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                 }
             }
 
-            echo "<style>
-            .checkboxgroup1 { margin-top:0 !important;  margin-bottom:0 !important; }
-            </style>";
+            echo "<style> .checkboxgroup1 { margin-top:0 !important;  margin-bottom:0 !important; } </style>";
 
             if (isset($data)) {
                 if (isset($data->examid)) {
                     $mform->addElement('text', 'tomagrade_currentExamID',
-                     get_string('tomagrade_currentExamIDonTomaGrade', 'plagiarism_tomagrade'), array('disabled' => 'disabled'));
+                                        get_string('tomagrade_currentExamIDonTomaGrade', 'plagiarism_tomagrade'), array('disabled' => 'disabled'));
                     $mform->setType('tomagrade_currentExamID', PARAM_TEXT);
                     $mform->setDefault('tomagrade_currentExamID', $data->examid);
                 }
@@ -1633,15 +1423,12 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
 
                 if (isset($data->share_teachers)) {
                     $shareteachers = explode(",", $data->share_teachers);
-
                     foreach ($shareteachers as $id) {
-
                         $mform->setDefault('tomagrade_shareTeacher_'.$id, true);
                     }
                 }
 
                 $mform->setDefault('tomagrade_upload', $data->upload);
-
                 if (isset( $data->idmatchontg)) {
                     $mform->setDefault('tomagrade_idmatchontg', $data->idmatchontg);
                 }
@@ -1660,12 +1447,12 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
                     . $cmid . '" target="_blank" onclick="removebutton()" >'
                     . get_string('Click_here', 'plagiarism_tomagrade') .'</a></span>';
                     $mform->addElement('static', 'mylink', get_string('Reset_the_exam', 'plagiarism_tomagrade'), $linkcontent);
-                    echo ("<script> function removebutton() {
-                var elem = document.getElementById('removeclick');
-                elem.parentNode.removeChild(elem);
-                var elem2 = document.getElementById('changeme');
-                elem2.innerHTML+='". get_string('The_test_has_been_reset', 'plagiarism_tomagrade') ."';
-                }</script>");
+                    echo ("<script> function removebutton() { ".
+                            "var elem = document.getElementById('removeclick'); ".
+                            "elem.parentNode.removeChild(elem); ".
+                            "var elem2 = document.getElementById('changeme'); ".
+                            "elem2.innerHTML+='". get_string('The_test_has_been_reset', 'plagiarism_tomagrade') ."'; ".
+                            "}</script>");
                 }
             } else {
                 $config = get_config('plagiarism_tomagrade');
@@ -1677,9 +1464,7 @@ function plagiarism_tomagrade_coursemodule_standard_elements($formwrapper, $mfor
 
 function get_teacher_codes_from_moodle_ids($teachers, $identifybyemail) {
     global $DB;
-
     $connection = new tomagrade_connection;
-
     $teachersemailsarray = array();
     $teacherscodesarray = array();
     $tempteacherscodearr = array();
@@ -1689,7 +1474,6 @@ function get_teacher_codes_from_moodle_ids($teachers, $identifybyemail) {
     }
 
     $config = get_config('plagiarism_tomagrade');
-
     $selectedteacherstoshare = $DB->get_records_sql(" select id,email,idnumber,username from {user} where id in ($teachers)");
 
     foreach ($selectedteacherstoshare as $teacher) {
@@ -1704,50 +1488,38 @@ function get_teacher_codes_from_moodle_ids($teachers, $identifybyemail) {
 
     if ($config->tomagrade_DefaultIdentifier_TEACHER == 4) {
         $selectedteacherstoshare2 = $DB->get_records_sql(" select tz,hujiid from huji.userdata where tz in (". implode(",", $tempteacherscodearr) .")");
-
         $teacherscodesarray = array();
-
         foreach ($selectedteacherstoshare2 as $teacher) {
             array_push($teacherscodesarray, $teacher->hujiid);
         }
-
     }
 
     $teacherscodestoshare = array();
-
     if ($identifybyemail) {
         $postdata = array();
         $postdata['emails'] = $teachersemailsarray;
-
         $response = $connection->post_request("GetTeacherIdMoodle", json_encode($postdata));
         $arrayteachersemailsandteachercode = $response['Message'];
 
         foreach ($arrayteachersemailsandteachercode as $teacher) {
             $teachercode = $teacher['ExternalTeacherID'];
-
             array_push($teacherscodestoshare, $teachercode);
         }
-
     } else {
         $teacherscodestoshare = $teacherscodesarray;
     }
-
     return $teacherscodestoshare;
 }
 
 function share_teachers($teachers, $teacherstoremove, $identifybyemail, $examidintg) {
-
     if (empty($teachers) && empty($teacherstoremove)) {
         return false;
     }
 
     global $DB;
-
     $connection = new tomagrade_connection;
     $connection->do_login();
-
     $errorinshareteachersync = false;
-
     $postdata = array();
     $postdata['usersSharedData'] = array();
 
@@ -1764,7 +1536,6 @@ function share_teachers($teachers, $teacherstoremove, $identifybyemail, $examidi
             $examinfo['ShareType'] = "Share";
             $examinfo['choose'] = "insertNewSharedUser";
             $examinfo['shareCurrentParticipants'] = true;
-
             array_push($postdata['usersSharedData'], $examinfo);
         }
     }
@@ -1782,7 +1553,6 @@ function share_teachers($teachers, $teacherstoremove, $identifybyemail, $examidi
             $examinfo['ShareType'] = "Share";
             $examinfo['choose'] = "1";
             $examinfo['shareCurrentParticipants'] = true;
-
             array_push($postdata['usersSharedData'], $examinfo);
         }
     }
@@ -1793,11 +1563,8 @@ function share_teachers($teachers, $teacherstoremove, $identifybyemail, $examidi
         if (isset($response['NumInsertRows']) || isset($response['NumUpdatedRows']) || isset($response['NumDeletedRows'])) {
             return true;
         }
-
     }
-
     return false;
-
 }
 
 function is_hidden_grades($cmid) {
@@ -1812,7 +1579,6 @@ function is_hidden_grades($cmid) {
 }
 
 function tomagrade_set_instance_config($cmid, $data) {
-
     global $DB;
     $current = $DB->get_record('plagiarism_tomagrade_config', array('cm' => $cmid));
 
@@ -1857,10 +1623,10 @@ function is_exam_exists_in_tg($examid) {
     } else if (isset($responsedecoded->Response) == false) {
         // Tomagrade server is unavilable right now.
         return -1;
+    }else{
+        // Exam exists.
+        return 1;
     }
-
-    // Exam exists.
-    return 1;
 }
 
 function tomagrade_get_instance_config($cmid) {
@@ -1871,7 +1637,6 @@ function tomagrade_get_instance_config($cmid) {
         return $config;
     }
     $config = get_config('plagiarism_tomagrade');
-
     $default = new stdClass();
     $default->upload = $config->tomagrade_DefaultUseTomax;
     $default->complete = 0;
@@ -1885,9 +1650,7 @@ function new_event_file_uploaded($eventdata) {
 
     if (check_enabled()) {
         $eventdata = $eventdata->get_data();
-
         $matalaid = $eventdata['contextinstanceid'];
-
         $filepathnamehash = array_pop($eventdata['other']['pathnamehashes']);
         $fs = get_file_storage();
         $file = $fs->get_file_by_hash($filepathnamehash);
@@ -1895,9 +1658,7 @@ function new_event_file_uploaded($eventdata) {
             return;
         }
         $assignsubmission = $DB->get_record('assign_submission', array('id' => $file->get_itemid())); // Get sumbmitted ID.
-
         $mimetype = $file->get_mimetype();
-
         $arr = explode("/", $mimetype);
         $ext = "";
         if (count($arr) == 2) {
@@ -1946,7 +1707,6 @@ function new_event_file_uploaded($eventdata) {
                     $printerrmsg = false;
                 }
             }
-
             if ($printerrmsg) {
                 \core\notification::error("The file you have submitted has been uploaded
                  but cannot be checked by the teacher.The files that will be able to be checked with the teacher are:
@@ -1956,8 +1716,6 @@ function new_event_file_uploaded($eventdata) {
     }
 }
 
-
-
 function tomagrade_log($data) {
     global $CFG;
 
@@ -1966,11 +1724,9 @@ function tomagrade_log($data) {
 function set_grade($cmid, $userid, $grade, $grader) {
     global $DB;
     $instance = $DB->get_record('course_modules', array('id' => $cmid));
-
     // Temp grade.
     $dbrec = $DB->get_record("assign_grades", array("assignment" => $instance->instance, "userid" => $userid));
     if (empty($dbrec)) {
-
         $data = new stdClass();
         $data->grade = $grade;
         $data->assignment = $instance->instance;
@@ -1979,7 +1735,6 @@ function set_grade($cmid, $userid, $grade, $grader) {
         $data->timemodified = time();
         $data->grader = $grader;
         $DB->insert_record('assign_grades', $data);
-
     } else {
         $DB->execute("UPDATE {assign_grades} SET   grade = :grade WHERE assignment = :instance AND userid = :userid",
          array('grade' => $grade, 'instance' => $instance->instance, 'userid' => $userid));
@@ -1995,10 +1750,7 @@ function set_grade($cmid, $userid, $grade, $grader) {
     $gradeobj['userid'] = $userid;
     $gradeobj['rawgrade'] = $grade;
     grade_update('mod/assign', $instance->course, 'mod', 'assign', $instance->instance, 0, $gradeobj);
-
 }
-
-
 
 function reset_main_grades($cmid) {
     global $DB;
@@ -2022,7 +1774,7 @@ function get_grade_id($instance) {
 
 class tomagrade_connection
 {
-
+    // STATUS
     const STATUS_NOT_STARTED = 0;
     const STATUS_WAITING = 1;
     const STATUS_ONGOING = 2;
@@ -2033,7 +1785,7 @@ class tomagrade_connection
     const STATUS_FAILED_UNKNOWN = 1002;
     const STATUS_FAILED_OPTOUT = 1003;
     const STATUS_FAILED_CONNECTION = 1004;
-
+    // REPORT
     const REPORT_STATS = 0;
     const REPORT_LINKS = 1;
     const REPORT_SOURCES = 2;
@@ -2046,7 +1798,7 @@ class tomagrade_connection
     const REPORT_PDFREPORT = 9;
     const REPORT_HIGHLIGHT = 25;
     const REPORT_GETSOURCE = 26;
-
+    // SUBMIT
     const SUBMIT_OK = 0;
     const SUBMIT_UNSUPPORTED = 1;
     const SUBMIT_OPTOUT = 2;
@@ -2061,7 +1813,6 @@ class tomagrade_connection
 
     public function do_login() {
         global $CFG;
-
         return 'success';
     }
 
@@ -2090,24 +1841,18 @@ class tomagrade_connection
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_HTTPHEADER => array("cache-control: no-cache",
              "x-apikey: $config->tomagrade_password", "x-userid: $config->tomagrade_username")
-
         ));
 
         $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);
-
         tomagrade_log("response : " . json_encode($response));
         tomagrade_log("================== end post $method to $config->tomagrade_server ====================");
-
         if ($dontdecode) {
             return $response;
         }
-
         return json_decode($response, true);
     }
-
-
 
     public function get_request($method, $getdata) {
         global $CFG;
@@ -2138,10 +1883,6 @@ class tomagrade_connection
         return $response;
     }
 
-
-
-
-
     public function teacher_login($id) {
         $config = $this->config;
         $inforamtion = plagiarism_plugin_tomagrade::get_teacher_identifier($id);
@@ -2158,9 +1899,6 @@ class tomagrade_connection
         return $response->Message;
     }
 
-
-
-
     public function upload_exam($contextid, $row, $sendmail = false) {
         $log = "";
         try {
@@ -2171,9 +1909,7 @@ class tomagrade_connection
               $matalainfo->idmatchontg != '' && is_null($matalainfo->idmatchontg) == false) {
                 $isexam = true;
             }
-
             $dontsendmail = !$sendmail;
-
             $cmid = $row->cmid;
             $filehash = $row->filehash;
             $useridtable = $row->userid;
@@ -2208,9 +1944,7 @@ class tomagrade_connection
             $stdc->_tmp_file_post_params = array();
             $mainfile->add_to_curl_request($stdc, "Key"); // Function to create it.
             $fields['file'] = $stdc->_tmp_file_post_params["Key"];
-
             $examidintg = $matalainfo->examid;
-
             $isexamexist = is_exam_exists_in_tg($examidintg);
 
             if ($isexamexist == -1) {
@@ -2237,17 +1971,14 @@ class tomagrade_connection
                         }
                     }
                 }
-
                 $originalname = $studentthodatzaot;
             } else {
                 if ($groupid != null) {
                     $originalname = $this->format_group_name($groupid);
                 } else {
                     $useridentefier = plagiarism_plugin_tomagrade::get_user_identifier($useridtable);
-
                     $originalname = $useridentefier;
                 }
-
             }
 
             if (empty($extensionname) == false) {
@@ -2257,19 +1988,17 @@ class tomagrade_connection
             $namefile = uniqid() . "-" . round(microtime(true)) . ".$extensionname"; // Add the identifier.
             $fields['file']->postname = $namefile;
             $fields['file']->mime = $mainfile->get_mimetype();
-
             $responsedecoded = $this->get_request("RestartExamStatus", "/$examidintg");
-
             $response = json_decode($responsedecoded);
             if ($response->Response == "OK") {
                 $DB->execute('UPDATE {plagiarism_tomagrade_config} SET complete = 0 WHERE cm = ?', array($cmid));
                 $tempdir = "TempDir_" . time();
                 if ($isexam == true) {
                     $url = "https://$config->tomagrade_server.tomagrade.com/TomaGrade/libs/fileUploader/uploadManagerZip.php?Exam_ID="
-                     . $examidintg . "&TempDirName=" . $tempdir;
+                     . $examidintg . "&TempDirName=" . $tempdir . "&UserID=" .$useridtable;
                 } else {
                     $url = "https://$config->tomagrade_server.tomagrade.com/TomaGrade/libs/fileUploader/uploadManagerZip.php?Exam_ID="
-                     . $examidintg . "&TempDirName=" . $tempdir;
+                     . $examidintg . "&TempDirName=" . $tempdir . "&UserID=" .$useridtable;
                 }
                 $ch = curl_init($url);
                 curl_setopt($ch, CURLOPT_URL, $url);
@@ -2305,9 +2034,7 @@ class tomagrade_connection
                     ];
 
                     if ($isexam) {
-
                         $idmatch = plagiarism_plugin_tomagrade::get_id_match_on_tg();
-
                         $idmatchstr = "ExamID";
                         if ($idmatch == 1) {
                             $idmatchstr = "CourseID";
@@ -2337,9 +2064,8 @@ class tomagrade_connection
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                     curl_setopt($ch, CURLOPT_HTTPHEADER,
-                     array("x-apikey: $config->tomagrade_password",
-                      "x-userid: $config->tomagrade_username"));
-
+                                array("x-apikey: $config->tomagrade_password",
+                                        "x-userid: $config->tomagrade_username"));
                     $responsedecoded = curl_exec($ch);
                     curl_close($ch);
 
@@ -2380,17 +2106,11 @@ class tomagrade_connection
         return "Group - " . $group->name . " (" . $groupid . ")";
     }
 
-
-
-
-
     public function get_courses() {
         $response = $this->get_request("GetCourses", "");
         $response = json_decode($response, true);
         return $response;
     }
-
-
 
     public function check_course($examidintg) {
         global $DB;
